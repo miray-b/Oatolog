@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oatlog - Sağlıklı Tarifler</title>
+    <style>
+        :root {
+            --oat-bg: #f8f4e3; 
+            --oat-green: #dbeede; 
+            --oat-beige: #e8e0c8; 
+            --oat-text: #5d4037; 
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background-color: var(--oat-bg);
+            color: var(--oat-text);
+            margin: 0;
+            padding: 20px;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* YÜZEN İKON ARKA PLANI (HOMOJEN VE ÇOKLU DAĞILIM) */
+        .icon-background {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            pointer-events: none;
+            z-index: 0; 
+            overflow: hidden;
+        }
+
+        .fixed-icon {
+            position: absolute;
+            width: 50px;
+            height: auto;
+            opacity: 0.2; 
+        }
+
+        .content-wrapper {
+            position: relative;
+            z-index: 1; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        /* LOGOLU BAŞLIK KONTEYNERİ */
+        .title-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px; 
+            margin-bottom: 50px;
+            margin-top: 20px;
+        }
+
+        /* LOGOLARI BÜYÜTEN KISIM */
+        .title-logo {
+            height: 100px; 
+            width: auto;
+            object-fit: contain;
+            transform: scale(1.4); 
+        }
+
+        h1.oatlog-title {
+            font-size: 4rem; 
+            color: var(--oat-text);
+            margin: 0 20px; 
+            position: relative;
+            z-index: 2;
+        }
+
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px; 
+            width: 100%;
+            max-width: 800px; 
+            margin-bottom: 20px;
+        }
+
+        /* 1. KARE VE CANLI KATEGORİ KARTLARI */
+        .category-box {
+            background-color: var(--oat-green);
+            aspect-ratio: 1 / 1; 
+            border-radius: 25px; 
+            cursor: pointer;
+            text-align: center;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15); 
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .category-title {
+            background-color: rgba(248, 244, 227, 0.95); 
+            color: var(--oat-text);
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.6rem;
+            font-weight: bold;
+            z-index: 2;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            pointer-events: none;
+        }
+
+        .category-box::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover;
+            background-position: center;
+            opacity: 1; 
+            filter: none; 
+            transition: transform 0.4s;
+            z-index: 1;
+        }
+
+        .category-box:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 25px rgba(0,0,0,0.25);
+        }
+        
+        .category-box:hover::before {
+            transform: scale(1.05); 
+        }
+
+        #kahvalti-box::before { background-image: url('kahvalti.jpg'); }
+        #ana-tabak-box::before { background-image: url('ana.jpg'); }
+        #tuzlu-box::before { background-image: url('tuzlu.jpg'); }
+        #tatli-box::before { background-image: url('tatli.jpg'); }
+
+        /* 2. AÇILIR LİSTE (AKORDEON) STİLLERİ */
+        .accordion-content {
+            display: none;
+            grid-column: span 2;
+            padding: 40px 30px;
+            border-radius: 25px;
+            margin-top: -15px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+
+        .accordion-content::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover;
+            background-position: center;
+            opacity: 0.9; 
+            z-index: -1;
+        }
+
+        #kahvalti-accordion::before { background-image: url('kahvalti.jpg'); }
+        #ana-tabak-accordion::before { background-image: url('ana.jpg'); }
+        #tuzlu-accordion::before { background-image: url('tuzlu.jpg'); }
+        #tatli-accordion::before { background-image: url('tatli.jpg'); }
+
+        .accordion-content.active {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        /* 3. DOLGULU TARİF BUTONLARI */
+        .recipe-btn {
+            background-color: var(--oat-beige); 
+            border: 2px solid #ffffff; 
+            padding: 15px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-family: 'Verdana', sans-serif;
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: var(--oat-text);
+            text-align: center;
+            transition: all 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.25); 
+            position: relative;
+            z-index: 1;
+        }
+
+        .recipe-btn:hover { 
+            background-color: #dbd2c0; 
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+        }
+
+        /* 4. MODAL VE KAYDIRMA (SCROLL) ÇÖZÜMÜ */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.7); 
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px); 
+        }
+
+        .modal-content {
+            background-color: var(--oat-bg);
+            padding: 50px 30px 50px 50px; 
+            border-radius: 30px;
+            width: 90%;
+            max-width: 650px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            position: relative;
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; 
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 20px; right: 25px;
+            font-size: 2.5rem;
+            color: var(--oat-text);
+            cursor: pointer;
+            z-index: 3; 
+        }
+
+        .modal-content::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(248, 244, 227, 0.93);
+            border-radius: 30px;
+            z-index: 1; 
+        }
+
+        .recipe-detail {
+            position: relative;
+            z-index: 2; 
+            max-height: 70vh; 
+            overflow-y: auto; 
+            padding-right: 20px; 
+        }
+
+        .recipe-detail::-webkit-scrollbar { width: 6px; }
+        .recipe-detail::-webkit-scrollbar-track { background: transparent; }
+        .recipe-detail::-webkit-scrollbar-thumb { background: rgba(93, 64, 55, 0.2); border-radius: 10px; }
+        .recipe-detail::-webkit-scrollbar-thumb:hover { background: rgba(93, 64, 55, 0.4); }
+
+        .modal-kahvalti { background-image: url('kahvalti.jpg'); }
+        .modal-ana-tabak { background-image: url('ana.jpg'); }
+        .modal-tuzlu { background-image: url('tuzlu.jpg'); }
+        .modal-tatli { background-image: url('tatli.jpg'); }
+
+        .recipe-detail h2 { font-size: 2rem; margin-top: 0; margin-bottom: 25px; color: var(--oat-text); }
+        .recipe-detail h3 { font-size: 1.3rem; margin-top: 20px; margin-bottom: 12px; border-bottom: 2px solid var(--oat-beige); display: inline-block; padding-bottom: 3px; }
+        
+        .recipe-detail ul, .recipe-detail ol { padding-left: 40px; margin-left: 0; }
+        .recipe-detail li { margin-bottom: 12px; line-height: 1.7; font-family: 'Verdana', sans-serif; font-size: 0.98rem; }
+        
+        .recipe-link {
+            font-family: 'Verdana', sans-serif;
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: var(--oat-text);
+            text-decoration: underline;
+            transition: color 0.2s;
+        }
+        .recipe-link:hover { color: #8e6c5c; }
+
+        .copyright-text { font-size: 0.8rem; color: #b1a094; margin-top: auto; padding-top: 50px; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <div class="icon-background">
+        <img src="avocadoicon.png" alt="avocado" class="fixed-icon" style="left: 5%; top: 8%; transform: rotate(15deg);">
+        <img src="broccoliicon.png" alt="broccoli" class="fixed-icon" style="left: 18%; top: 25%; transform: rotate(-10deg);">
+        <img src="carroticon.png" alt="carrot" class="fixed-icon" style="left: 8%; top: 55%; transform: rotate(20deg);">
+        <img src="raspberryicon.png" alt="raspberry" class="fixed-icon" style="left: 25%; top: 75%; transform: rotate(-15deg);">
+        <img src="strawberryicon.png" alt="strawberry" class="fixed-icon" style="left: 12%; top: 90%; transform: rotate(5deg);">
+        
+        <img src="avocadoicon.png" alt="avocado" class="fixed-icon" style="left: 15%; top: 45%; transform: rotate(-5deg);">
+        <img src="broccoliicon.png" alt="broccoli" class="fixed-icon" style="left: 45%; top: 40%; transform: rotate(12deg);">
+        <img src="carroticon.png" alt="carrot" class="fixed-icon" style="left: 30%; top: 65%; transform: rotate(-20deg);">
+        <img src="raspberryicon.png" alt="raspberry" class="fixed-icon" style="left: 40%; top: 85%; transform: rotate(8deg);">
+        <img src="strawberryicon.png" alt="strawberry" class="fixed-icon" style="left: 85%; top: 35%; transform: rotate(-18deg);">
+
+        <img src="avocadoicon.png" alt="avocado" class="fixed-icon" style="left: 65%; top: 30%; transform: rotate(22deg);">
+        <img src="broccoliicon.png" alt="broccoli" class="fixed-icon" style="left: 58%; top: 60%; transform: rotate(-12deg);">
+        <img src="carroticon.png" alt="carrot" class="fixed-icon" style="left: 75%; top: 80%; transform: rotate(15deg);">
+        <img src="raspberryicon.png" alt="raspberry" class="fixed-icon" style="left: 82%; top: 15%; transform: rotate(-8deg);">
+        <img src="strawberryicon.png" alt="strawberry" class="fixed-icon" style="left: 92%; top: 45%; transform: rotate(10deg);">
+        
+        <img src="avocadoicon.png" alt="avocado" class="fixed-icon" style="left: 88%; top: 70%; transform: rotate(-25deg);">
+        <img src="broccoliicon.png" alt="broccoli" class="fixed-icon" style="left: 70%; top: 92%; transform: rotate(18deg);">
+        <img src="carroticon.png" alt="carrot" class="fixed-icon" style="left: 95%; top: 5%; transform: rotate(-10deg);">
+        <img src="raspberryicon.png" alt="raspberry" class="fixed-icon" style="left: 50%; top: 95%; transform: rotate(15deg);">
+        <img src="strawberryicon.png" alt="strawberry" class="fixed-icon" style="left: 2%; top: 35%; transform: rotate(-5deg);">
+    </div>
+
+    <div class="content-wrapper">
+        
+        <div class="title-container">
+            <img src="logosol.png" alt="Oatlog Sol Logo" class="title-logo">
+            <h1 class="oatlog-title">Oatlog</h1>
+            <img src="logosag.png" alt="Oatlog Sağ Logo" class="title-logo">
+        </div>
+
+        <div class="categories-grid">
+            <div class="category-box" id="kahvalti-box" onclick="toggleAccordion('kahvalti')">
+                <span class="category-title">Kahvaltılıklar</span>
+            </div>
+            <div class="accordion-content" id="kahvalti-accordion">
+                <button class="recipe-btn" onclick="showRecipe('3 Zeytinli Poğaça', 'kahvalti')">3 Zeytinli Poğaça</button>
+                <button class="recipe-btn" onclick="showRecipe('Bol Sebzeli Protein Muffin', 'kahvalti')">Bol Sebzeli Protein Muffin</button>
+                <button class="recipe-btn" onclick="showRecipe('Çıtır Yulaflı Omlet Pizza', 'kahvalti')">Çıtır Yulaflı Omlet Pizza</button>
+                <button class="recipe-btn" onclick="showRecipe('Frambuazlı Protein Pankek', 'kahvalti')">Frambuazlı Protein Pankek</button>
+                <button class="recipe-btn" onclick="showRecipe('Havuçlu Taco Pancake', 'kahvalti')">Havuçlu Taco Pancake</button>
+                <button class="recipe-btn" onclick="showRecipe('Yulaf Poğaça', 'kahvalti')">Yulaf Poğaça</button>
+                <button class="recipe-btn" onclick="showRecipe('Yüksek Proteinli Lavaş Dürüm', 'kahvalti')">Yüksek Proteinli Lavaş Dürüm</button>
+            </div>
+
+            <div class="category-box" id="ana-tabak-box" onclick="toggleAccordion('ana-tabak')">
+                <span class="category-title">Ana Tabaklar</span>
+            </div>
+            <div class="accordion-content" id="ana-tabak-accordion">
+                <button class="recipe-btn" onclick="showRecipe('Enginarlı ve Kuşkonmazlı Bahar Pilavı', 'ana-tabak')">Enginarlı Bahar Pilavı</button>
+                <button class="recipe-btn" onclick="showRecipe('Enginarlı ve Otlu Basmati Pilavı', 'ana-tabak')">Enginarlı Otlu Pilavı</button>
+                <button class="recipe-btn" onclick="showRecipe('Fırında Çıtır Tavuk', 'ana-tabak')">Fırında Çıtır Tavuk</button>
+                <button class="recipe-btn" onclick="showRecipe('Kaptan Bezelye', 'ana-tabak')">Kaptan Bezelye</button>
+                <button class="recipe-btn" onclick="showRecipe('Mercimek Mantısı', 'ana-tabak')">Mercimek Mantısı</button>
+                <button class="recipe-btn" onclick="showRecipe('Mercimekli Fırın Balkabağı', 'ana-tabak')">Mercimekli Balkabağı</button>
+                <button class="recipe-btn" onclick="showRecipe('Mısır Tabanlı Tavuklu Pizza (Yüksek Proteinli)', 'ana-tabak')">Mısır Tabanlı Tavuk Pizza</button>
+                <button class="recipe-btn" onclick="showRecipe('Mısır Wrap', 'ana-tabak')">Mısır Wrap</button>
+                <button class="recipe-btn" onclick="showRecipe('Tavuklu Tarator Salata', 'ana-tabak')">Tavuklu Tarator Salata</button>
+                <button class="recipe-btn" onclick="showRecipe('Ton Balıklı ve Makarnalı Sağlıklı Salata', 'ana-tabak')">Ton Balıklı Sağlıklı Salata</button>
+                <button class="recipe-btn" onclick="showRecipe('Yeşil Mercimek Tofusu (Dürüm)', 'ana-tabak')">Yeşil Mercimek Tofusu</button>
+            </div>
+
+            <div class="category-box" id="tuzlu-box" onclick="toggleAccordion('tuzlu')">
+                <span class="category-title">Tuzlu Atıştırmalıklar</span>
+            </div>
+            <div class="accordion-content" id="tuzlu-accordion">
+                <button class="recipe-btn" onclick="showRecipe('Çıtır Nohutlu Brokoli Salatası', 'tuzlu')">Çıtır Nohutlu Brokoli Salata</button>
+                <button class="recipe-btn" onclick="showRecipe('Çıtır Parmesanlı Brokoli', 'tuzlu')">Çıtır Parmesanlı Brokoli</button>
+                <button class="recipe-btn" onclick="showRecipe('Panelenmiş Halka Kabak', 'tuzlu')">Panelenmiş Halka Kabak</button>
+                <button class="recipe-btn" onclick="showRecipe('Patates Çanağı', 'tuzlu')">Patates Çanağı</button>
+                <button class="recipe-btn" onclick="showRecipe('Patatesli Glutensiz Pirinç Yufkası Böreği', 'tuzlu')">Pirinç Yufkası Böreği</button>
+                <button class="recipe-btn" onclick="showRecipe('Sebzeli Galette', 'tuzlu')">Sebzeli Galette</button>
+                <button class="recipe-btn" onclick="showRecipe('Soslu Çıtır Patates Salatası', 'tuzlu')">Soslu Çıtır Patates Salata</button>
+                <button class="recipe-btn" onclick="showRecipe('Yeşil Mercimek Köftesi', 'tuzlu')">Yeşil Mercimek Köftesi</button>
+                <button class="recipe-btn" onclick="showRecipe('Yeşil Mercimekli Salata', 'tuzlu')">Yeşil Mercimekli Salata</button>
+            </div>
+
+            <div class="category-box" id="tatli-box" onclick="toggleAccordion('tatli')">
+                <span class="category-title">Sağlıklı Tatlılar</span>
+            </div>
+            <div class="accordion-content" id="tatli-accordion">
+                <button class="recipe-btn" onclick="showRecipe('2 Malzemeli Hindistan Cevizli Kurabiye', 'tatli')">2 Malzemeli Hindistan Cevizli Kurabiye</button>
+                <button class="recipe-btn" onclick="showRecipe('Çilekli Galette', 'tatli')">Çilekli Galette</button>
+                <button class="recipe-btn" onclick="showRecipe('Kakaolu Tahin Soslu Yulaflı Krep', 'tatli')">Tahin Soslu Yulaflı Krep</button>
+                <button class="recipe-btn" onclick="showRecipe('Pişmeyen Pratik Cheesecake', 'tatli')">Pişmeyen Pratik Cheesecake</button>
+                <button class="recipe-btn" onclick="showRecipe('Protein Çörek (Rus Çöreği)', 'tatli')">Protein Çörek</button>
+                <button class="recipe-btn" onclick="showRecipe('Raffaello Tadında Ara Öğün', 'tatli')">Raffaello Tadında Ara Öğün</button>
+                <button class="recipe-btn" onclick="showRecipe('Rafine Şekersiz ve Unsuz Şeftalili Galette', 'tatli')">Şeftalili Galette</button>
+                <button class="recipe-btn" onclick="showRecipe('Snickers Tadında Atıştırmalık', 'tatli')">Snickers Tadında Atıştırmalık</button>
+                <button class="recipe-btn" onclick="showRecipe('Şekersiz Şeftalili Crumble', 'tatli')">Şekersiz Şeftalili Crumble</button>
+                <button class="recipe-btn" onclick="showRecipe('Yulaflı Elmalı Çubuk Kraker ve Sağlıklı Dip Sos', 'tatli')">Yulaflı Elmalı Kraker</button>
+            </div>
+        </div>
+        <p class="copyright-text">Copyright Oatlog Inc.</p>
+    </div>
+
+    <div id="recipe-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <div id="recipe-detail-area" class="recipe-detail"></div>
+        </div>
+    </div>
+
+    <script>
+        const recipes = {
+            '3 Zeytinli Poğaça': {
+                ingredients: ['Yarım su bardağı süt', 'Yarım su bardağı yoğurt', '1 paket instant maya', '1 çay kaşığı tuz', '1 tatlı kaşığı toz şeker', 'Aldığı kadar (yaklaşık 2 su bardağı) tam buğday unu', 'İçi için: Yarım su bardağı siyah zeytin, Yarım su bardağı yeşil zeytin, Yarım su bardağı pancarlı zeytin', 'Üzeri için: Yumurta sarısı, Susam, Çörekotu, İç ayçekirdeği'],
+                instructions: ['Hamur malzemelerini (süt, yoğurt, maya, tuz, şeker ve tam buğday ununu) birleştirerek yoğurun.', 'Siyah, yeşil ve pancarlı zeytinleri iç harç olarak kullanarak poğaçalara şekil verin.', 'Poğaçaların üzerine yumurta sarısı sürün; susam, çörekotu ve iç ayçekirdeği serpin.'],
+                link: '3 Zeytinli Poğaça Tarifi',
+                url: 'https://www.instagram.com/p/DEuBL9Voglw/'
+            },
+            'Bol Sebzeli Protein Muffin': {
+                ingredients: ['5 adet yumurta', '60 gram beyaz peynir', '75 gram lor peyniri', '1 büyük dal brokoli veya karnabahar', 'Maydanoz, dereotu', 'Yeşil biber, kırmızı biber', '1 orta boy rendelenmiş havuç', '3-4 büyük yaprak ıspanak veya pazı', '1 orta boy domates', '2 çay kaşığı pul biber', '1 çay kaşığı tuz', '1 çimdik karbonat', '1 yemek kaşığı zeytinyağı (kalıpları yağlamak için)', 'Üzeri için: Çörekotu, susam, keten tohumu'],
+                instructions: ['Muffinlerin kalıplardan kolay çıkması için kalıpları 1 yemek kaşığı zeytinyağı ile yağlayın.', 'Tüm malzemeleri (yumurta, peynirler, doğranmış sebzeler ve baharatlar) bir kapta karıştırın ve muffin kalıplarına paylaştırın.', 'Üzerine çörekotu, susam ve keten tohumu ekleyin.', '180-200 derecede yaklaşık 20 dakika kadar kontrol ederek pişirin.'],
+                link: 'Bol Sebzeli Protein Muffin Tarifi',
+                url: 'https://www.instagram.com/p/DEppgo9I_9n/'
+            },
+            'Çıtır Yulaflı Omlet Pizza': {
+                ingredients: ['Alt Taban İçin: 3 yemek kaşığı yulaf, 1 tatlı kaşığı tereyağı', 'Omlet İçin: 2 adet yumurta, 2 yemek kaşığı süt, Tuz + karabiber', 'Salça Sos İçin: 1 tatlı kaşığı domates salçası, Kuru fesleğen veya kekik, Açmak için domates sosu veya su', 'Üzeri İçin: Biber + domates dilimleri, Eriyebilen peynir, Kuru fesleğen veya kekik'],
+                instructions: ['Yulaflar tereyağı ile bir tavaya alınır ve kısık ateşte hafif renk değiştirinceye kadar kavrulur.', 'Yumurta ve süt güzelce çırpılır ve yulafların üzerine dökülür.', 'Altı kısık pişirdiğinizden emin olun, tavanın kapağını kapatıp yumurtayı pişmeye bırakıyoruz.', 'Sos güzelce karıştırılır ve pişen omlet üzerine sürülür.', 'Peynirler eriyinceye kadar yine kısık ateşte kapağı kapalı pişmeye bırakılır.'],
+                link: 'Çıtır Yulaflı Omlet Pizza Tarifi',
+                url: 'https://www.instagram.com/p/CvaRnvMIDWx/'
+            },
+            'Frambuazlı Protein Pankek': {
+                ingredients: ['1 orta boy olgunlaşmış muz', '2 adet yumurta', '50 gram / yarım çay bardağı lor peyniri', '60 gram yulaf ezmesi', '2 yemek kaşığı süt', '2 çay kaşığı kabartma tozu', '1 çimdik tuz', '1 tatlı kaşığı zeytinyağı (tavayı yağlamak için)', 'Frambuazlı sos için: 1 avuç frambuaz, 1 tatlı kaşığı chia tohumu, 2 yemek kaşığı su, birkaç damla limon suyu', 'Üzeri için: 1/2 paket quark veya süzme yoğurt (70g), 1 tatlı kaşığı tahin veya fıstık ezmesi'],
+                instructions: ['Blenderda tüm pankek malzemelerinin güzelce karıştığından emin olalım.', 'Pankeklerin yapışmaması için tavamızı az zeytinyağı ile yağlayıp peçete yardımı ile tüm tavaya homojen dağıtalım.', 'Pankeklerin aynı boyutta olması için pankek tavası veya küçük bir tava kullanarak hamuru pişirelim.', 'Sos malzemelerini bir kaba alalım, frambuazlı sos biraz suyunu çekip kıvamlaşmaya başlayınca ocaktan alalım.', 'Pankeklerin üzerine quark/yoğurt, frambuazlı sos ve tahin/fıstık ezmesi ekleyerek servis edelim.'],
+                link: 'Frambuazlı Protein Pankek Tarifi',
+                url: 'https://www.instagram.com/p/C9SaBILI7LG/'
+            },
+            'Havuçlu Taco Pancake': {
+                ingredients: ['1 küçük boy olgunlaşmış muz', '1 orta boy yumurta', '40 gr lor peyniri', '3 yemek kaşığı yulaf ezmesi (30gr)', '4-5 yemek kaşığı süt', 'Yarım çay kaşığı karbonat veya kabartma tozu', 'Bir çimdik tuz', 'Yarım çay kaşığı tarçın', '1 küçük rendelenmiş boy havuç', 'Toplam 1 tatlı kaşığı zeytinyağı (tavayı yağlamak için)', 'Sosu için: 1 yemek kaşığı süzme yoğurt/protein quark, 1 yemek kaşığı yoğurt, 1 tatlı kaşığı tahin (isteğe bağlı 1 tatlı kaşığı bal)', 'Üzeri için: 1 tam ceviz içi, kırmızı meyveler, 1 tatlı kaşığı tahin (isteğe bağlı)', 'Opsiyonel: 1 ölçek protein tozu'],
+                instructions: ['Muz, yumurta, lor peyniri, yulaf ezmesi, süt, karbonat veya kabartma tozu, tuz ve tarçını pürüzsüz kıvama gelene kadar rondodan geçirin.', '1 küçük rendelenmiş havucu pankek karışımına sonradan ilave edip güzelce karıştırın.', 'Pankeklerin yapışmaması için tavanın her yerini toplam 1 tatlı kaşığı zeytinyağı ile güzelce yağlayın ve pankekleri pişirin.', 'Süzme yoğurt, yoğurt ve tahini (istenirse balı) karıştırarak sosu hazırlayın.', 'Pankekleri sos, tam ceviz içi, kırmızı meyveler ve isteğe bağlı tahin ile tamamlayın.'],
+                link: 'Havuçlu Taco Pancake Tarifi',
+                url: 'https://www.instagram.com/p/DFNhi-3IwAK/'
+            },
+            'Yulaf Poğaça': {
+                ingredients: ['2 su bardağı dolusu yulaf ezmesi (ince öğütülmüş / glutensiz)', '2 adet yumurta', '3 yemek kaşığı yoğurt', 'Bir tutam ince kıyılmış dereotu', 'Dilediğiniz peynir (tulum, kaşar, çeçil vb.)', '1 çay kaşığı karbonat', 'Üzeri için: Çörekotu ve susam'],
+                instructions: ['Tüm malzemeleri bir kapta güzelce karıştırın.', 'Hamuru kaşık yardımıyla porsiyonlayıp yağlı kağıt serili tepsiye dizin.', 'Üstüne çörekotu ve susam ekleyin.', 'Önceden ısıtılmış 180°C fırında, yaklaşık 20 dakika kontrollü şekilde pişirin.'],
+                link: 'Yulaf Poğaça Tarifi',
+                url: 'https://www.instagram.com/p/DVL1q_iCDZE/'
+            },
+            'Yüksek Proteinli Lavaş Dürüm': {
+                ingredients: ['2 orta boy havuç', '2 adet yumurta', '2 yemek kaşığı yulaf ezmesi', '1/2 çay kaşığı karabiber', 'Tuz', 'Üzeri için: Susam', 'İç Malzemeler: 3 yemek kaşığı sürülebilir lor, 1 avuç göbek, 1 küçük boy domates, 1 küçük boy salatalık, 1 küçük boy kapya biber, Maydanoz, 1 çay kaşığı pesto'],
+                instructions: ['Lavaş malzemelerini (havuç, yumurta, yulaf ezmesi, karabiber, tuz) birleştirin ve üzerine susam ekleyerek pişirin.', 'Hazırladığınız yulaflı lavaşın içine lor, göbek, domates, salatalık, kapya biber, maydanoz ve pestodan oluşan iç malzemeleri ekleyin.', 'Güzelce dürüm yaptıktan sonra ister hemen, isterseniz de akşamdan hazırlayıp bir sonraki sabah kahvaltı olarak işe/okula götürüp tüketebilirsiniz.'],
+                link: 'Yüksek Proteinli Lavaş Dürüm Tarifi',
+                url: 'https://www.instagram.com/p/DLpuddtoYyg/'
+            },
+
+            'Enginarlı ve Kuşkonmazlı Bahar Pilavı': {
+                ingredients: ['4 yemek kaşığı zeytinyağı', '3 sap taze soğan', '1 adet limonun kabuğu (rendelenmiş)', '2 adet defne yaprağı', '1 tatlı kaşığı tuz', '1/2 çay kaşığı karabiber', '1/2 demet kuşkonmaz', '3 adet çanak enginar', '1 su bardağı basmati pirinç', '2 su bardağı su', '1/2 demet taze nane', '1/2 demet maydanoz', '1/2 demet dereotu', '1/2 limonun suyu'],
+                instructions: ['Kuşkonmazların sert kısımlarını kesin, kaynar tuzlu suda 4 dakika haşlayıp hemen buzlu suyun içine alın (şoklama).', 'Zeytinyağını ısıtın, taze soğanları ekleyip kavurun. Küp küp kesilmiş enginarları, limon kabuğunu, limon suyunu, defne yaprağını ve 1/2 çay bardağı suyu ekleyip tencerenin kapağını kapatın.', 'Orta ateşte enginarlar yumuşayana kadar yaklaşık 10 dakika pişirin.', 'Enginarlar yumuşayınca basmati pirinci, tuz ve karabiberi ekleyip karıştırın. Kuşkonmazları haşladığınız sudan 2 su bardağı pirincin içine ekleyin ve 2-3 dakika daha pişirin.', 'Ocağın altını kısıp ağzı kapalı 10 dakika haşlayın.', 'İçine irice kesilmiş yeşillikleri (nane, maydanoz, dereotu) ve kuşkonmazları ekleyip ağzı kapalı 5 dakika demlenmeye bırakın.', 'Üzerinden zeytinyağı gezdirin ve biraz daha limon ekleyerek servis edin.'],
+                link: 'Enginarlı ve Kuşkonmazlı Bahar Pilavı Tarifi',
+                url: 'https://www.instagram.com/p/DIg8md4tA6F/'
+            },
+            'Enginarlı ve Otlu Basmati Pilavı': {
+                ingredients: ['Enginar', 'Soğan', 'Zeytinyağı', '1 bardak basmati pirinç', '2 bardak sıcak su', 'Bol maydanoz, taze soğan ve dereotu', '2 yemek kaşığı bezelye', 'Limon'],
+                instructions: ['Enginarı ve soğanı zeytinyağında yumuşayana kadar soteleyin.', 'Üzerine 1 bardak yıkanmış basmati pirinci ekleyin.', '2 bardak sıcak suyu dökün, tencerenin kapağını kapatıp kısık ateşte demlemeye bırakın.', 'Altını kapattıktan sonra içine bol maydanoz, taze soğan, dereotu ve 2 yemek kaşığı bezelyeyi ilave edin.', 'Üzerine limon sıkıp, limon dilimleriyle süsleyerek servis edin.'],
+                link: 'Enginarlı ve Otlu Basmati Pilavı Tarifi',
+                url: 'https://www.instagram.com/p/DJUsOKMuYWa/'
+            },
+            'Fırında Çıtır Tavuk': {
+                ingredients: ['3-4 adet tavuk göğsü (jülyen doğranmış)', 'Sosu (Terbiyesi) İçin: 1 bardak maden suyu, 1,5 yemek kaşığı un, 1 yumurta, Tuz, Kırmızı toz biber, Kekik, Bir çimdik şeker', 'Bulamak ve Pişirmek İçin: Galeta unu (veya ufalanmış cips/şekersiz mısır gevreği), Zeytinyağı'],
+                instructions: ['Maden suyu, un, yumurta ve baharatları geniş bir kapta pürüzsüz olana kadar karıştırarak sosu hazırlayın.', 'Jülyen doğranmış tavukları bu sosa bulayın.', 'Üzerini kapatıp buzdolabında en az 2 saat marine edin.', 'Dinlenen tavukları sostan çıkarırken fazlasını hafifçe sıyırın, ardından galeta ununa bulayıp pişirme kağıdı serili fırın tepsisine dizin.', 'Tavukların hem üzerine hem de diplerine temas edecek şekilde biraz zeytinyağı gezdirin.', 'Önceden ısıtılmış 180 derece fırında, üzerleri kızarana kadar yaklaşık 20-25 dakika kontrollü olarak pişirin.'],
+                link: 'Fırında Çıtır Tavuk Tarifi',
+                url: 'https://www.instagram.com/reel/DNBCKEAM70r/'
+            },
+            'Kaptan Bezelye': {
+                ingredients: ['1 demet yeşil soğan', '500 gr ayıklanmış bezelye', '100 ml zeytinyağı', '2,5 portakalın suyu (Şeker veya bal yerine doğal tatlandırıcı olarak kullanılıyor)', '1 demet dereotu', 'Tuz, karabiber', 'Biraz su (üzerini geçecek kadar)'],
+                instructions: ['Yeşil soğanları doğrayın ve zeytinyağında karamelize olana kadar iyice kavurun.', 'Kavrulan soğanların üzerine bezelyeleri ekleyip bir süre pişirin.', 'Üzerine bolca tuz, karabiber, portakal suyunu ve bezelyelerin üzerini biraz geçecek kadar suyu ilave edin.', 'Orta kısık ateşte bezelyeler suyunu çekip yağında kalana kadar pişirmeye devam edin.', 'Bezelyeler piştikten sonra tencereyi ocaktan alın, ince kıyılmış dereotunu ekleyip karıştırın.', 'Yemeği soğumaya bırakın; tamamen soğuduktan sonra servis edin.'],
+                link: 'Kaptan Bezelye Tarifi',
+                url: 'https://www.instagram.com/p/C66sDFILnHV/'
+            },
+            'Mercimek Mantısı': {
+                ingredients: ['1 çay bardağı kırmızı mercimek', '2 çay bardağı sıcak su', '1/2 çay bardağı ince bulgur', 'Dilediğiniz baharatlar (tuz, karabiber, pul biber, kırmızı toz biber)', 'Yoğurt', 'Üzeri için (Opsiyonel): 1 tatlı kaşığı yağ + kırmızı toz biber + nane'],
+                instructions: ['Mercimeği yıkayıp 2 çay bardağı sıcak su ile tencerede altı kısık şekilde haşlayın.', 'Ardından içerisine ince bulguru ve baharatları ilave edip karıştırın.', 'Kapağını kapatarak 10-15 dakika dinlendirin. (Kıvamı ne çok sıvı ne çok katı olmalıdır).', 'Dinlenen mercimeklerden top yapın ve tabağa dizin.', 'Üzerine sarımsaklı yoğurt sos ve kırmızı toz biberli sos ile servis edin.'],
+                link: 'Mercimek Mantısı Tarifi',
+                url: 'https://www.instagram.com/p/DI6tHlMCJYn/'
+            },
+            'Mercimekli Fırın Balkabağı': {
+                ingredients: ['Fırın Balkabağı için: 2 adet mini balkabağı ya da büyük bir dilim, 2 yemek kaşığı zeytinyağı, Tuz, karabiber', 'Mercimekli İç Harç için: 150 gr yeşil mercimek, 1 adet kırmızı soğan, 2 diş sarımsak, 1 çay kaşığı pul biber, 1 çay kaşığı kimyon, 1 tatlı kaşığı toz tatlı biber, 1/2 su bardağı su, 1/4 demet nane, 1 limonun kabuğu'],
+                instructions: ['Fırını 200\'ye ayarlayın.', 'Balkabaklarını fırın kağıdı konulmuş tepsiye koyun. Zeytinyağı, tuz ve karabiber ekleyin. 25-30 dk pişirin.', 'Mercimekleri yıkayın. Tuzlu kaynar suyun içine alın. Ağzını kapatın. 20 dk haşlayıp suyunu süzün.', 'Zeytinyağını ısıtın. Soğanı ve sarımsağı ekleyip soteleyin.', 'Baharatları ekleyin. Suyu ve mercimekleri ilave edip kapağını kapatın. Kısık ateşte 15 dk suyunu çekene kadar bekleyin.', 'Limon kabuğu ve naneyi ekleyip karıştırın ve ocaktan alın.', 'Balkabaklarının içini mercimekle doldurun ya da dilim balkabakları ile karıştırın.'],
+                link: 'Mercimekli Fırın Balkabağı Tarifi',
+                url: 'https://www.instagram.com/p/CjV1PX2D8ps/'
+            },
+            'Mısır Tabanlı Tavuklu Pizza (Yüksek Proteinli)': {
+                ingredients: ['Taban Malzemeleri: 2 su bardağı haşlanmış mısır, 1 su bardağı rendelenmiş kaşar peyniri (Kalan yarım bardak üzerine eklenecek)', 'Üzeri İçin: 1 adet haşlanmış ve tiftiklenmiş tavuk göğsü (150 g), Yarım su bardağı rendelenmiş kaşar peyniri', 'Sos Malzemeleri: 1 yemek kaşığı domates salçası, 1 tatlı kaşığı acı sos, Tuz, karabiber, isteğe göre kekik'],
+                instructions: ['2 su bardağı haşlanmış mısırı ve 1 su bardağı rendelenmiş kaşar peynirini karıştırıp bir pizza tabanı formu verin.', 'Hazırladığınız tabanı, peynirler eriyene kadar 180 derece fırında bekletin.', 'Salça, acı sos ve bahartları bir kapta karıştırarak pizza sosunu hazırlayın.', 'Peynirleri eriyen tabanı fırından çıkarın, üzerine hazırladığınız sosu her yerine gelecek şekilde sürün.', 'Sosun üzerine tiftiklenmiş tavuk göğsünü ve kalan yarım su bardağı kaşar peynirini ekleyin.', 'Tekrar fırına verip 180 derecede 15 dakika daha pişirerek servis edin.'],
+                link: 'Mısır Tabanlı Tavuklu Pizza (Yüksek Proteinli) Tarifi',
+                url: 'https://www.instagram.com/p/DQcRXGaAryF/'
+            },
+            'Mısır Wrap': {
+                ingredients: ['200 g haşlanmış mısır', '1 çay bardağı rende kaşar peyniri', 'Ton balığı', 'Kapya biber', 'Salatalık', 'Sos için: 1 yemek kaşığı labne, 1 tatlı kaşığı süzme yoğurt, yeşil soğan, nane, kornişon turşu, hardal'],
+                instructions: ['200 g haşlanmış mısır ve 1 çay bardağı rende kaşar peynirini karıştırın.', 'Karışımı fırın kağıdı serilmiş tepsiye yayın ve 200 derece fırında 20 dakika pişirin.', 'Sos için; labne, süzme yoğurt, doğranmış yeşil soğan, nane, kornişon turşu ve hardalı bir kapta karıştırın.', 'Fırından çıkan çıtır mısır tabanının arasına hazırladığınız sosu sürün; üzerine ton balığı, kapya biber ve salatalık ekleyip katlayın.'],
+                link: 'Mısır Wrap Tarifi',
+                url: 'https://www.instagram.com/p/DLxgoWQohZ_/'
+            },
+            'Tavuklu Tarator Salata': {
+                ingredients: ['250g haşlanmış tavuk göğsü', '1 orta boy kuru soğan', '2 orta boy havuç', '2 adet mor havuç', '1 yemek kaşığı zeytinyağı', '1 orta boy patates', 'Lolorosso', 'Dereotu', '4 tam kırılmış ceviz içi', 'Sos için: 4 yemek kaşığı yoğurt, 1 yemek kaşığı süzme yoğurt, 1 yemek kaşığı tahin, 1/2 limon suyu, tuz'],
+                instructions: ['Kuru soğanı kapağı kapalı bir şekilde terleterek karamelize edin.', 'Turuncu ve mor havuçları 1 yemek kaşığı zeytinyağı ile soteleyin.', 'Patatesi küp küp doğrayın, tatlı toz biber ve zeytinyağı ile harmanlayıp fırında pişirin.', 'Sos için; yoğurt, süzme yoğurt, tahin, limon suyu ve tuzu bir kapta pürüzsüz olana kadar karıştırın.', 'Haşlanmış tavuk göğsü, sotelenen havuçlar, karamelize soğan, lolorosso, fırınlanmış patates, dereotu ve ceviz içini geniş bir kaba alın.', 'Hazırladığınız yoğurtlu beyaz sosu malzemelerin üzerine ekleyerek güzelce harmanlayın.'],
+                link: 'Tavuklu Tarator Salata Tarifi',
+                url: 'https://www.instagram.com/p/DQw_0ssjNlJ/'
+            },
+            'Ton Balıklı ve Makarnalı Sağlıklı Salata': {
+                ingredients: ['1 kutu yağı süzülmüş ton balığı', '3 yemek kaşığı makarna (tercihen tam buğday)', '1 yemek kaşığı mısır', '1 adet salatalık', '1 kornişon turşu', 'Yeşillikler ve marul', '1 közlenmiş kapya biber', 'Sosu İçin: 2 tepeleme yemek kaşığı yoğurt, 1/2 tatlı kaşığı pesto sosu (isteğe bağlı), Biraz limon suyu, Baharatlar, Dereotu'],
+                instructions: ['Salata için gerekli olan tüm sebzeleri (salatalık, turşu, yeşillik, marul ve kapya biberi) doğrayın.', 'Ayrı bir yerde yoğurt, pesto sosu, limon suyu, baharatlar ve dereotunu karıştırarak sosu hazırlayın.', 'Ton balığının yağını iyice süzün.', 'Doğradığınız sebzeleri, haşlanmış makarnayı, mısırı ve ton balığını bir kasede birleştirin. Üzerine hazırladığınız sosu döküp karıştırın.'],
+                link: 'Ton Balıklı ve Makarnalı Sağlıklı Salata Tarifi',
+                url: 'https://www.instagram.com/reel/DKH9BiKCQhI/'
+            },
+            'Yeşil Mercimek Tofusu (Dürüm)': {
+                ingredients: ['Tofu Malzemeleri: 200 gr yeşil mercimek, 500 ml su, Baharatlar: Tuz, toz kırmızı biber, kekik, toz sarımsak, toz soğan, kimyon', 'Dürüm İçin: Lavaş, Kuru naneli süzme yoğurt, Salatalık turşusu, Domates sos, Roka'],
+                instructions: ['Mercimekleri geceden bol suda bekletin.', 'Ertesi gün suyunu süzüp temiz su ve baharatlarla birlikte blenderdan pürüzsüz olana kadar geçirin.', 'Karışımı yapışmayan bir tencereye alın. Önce 2-3 dakika yüksek ateşte sürekli karıştırarak pişirin.', 'Ardından kısık-orta ateşte, karışım iyice katılaşana kadar yaklaşık 5 dakika daha pişirmeye devam edin.', 'Yağlı kağıt serilmiş bir kaba karışımı dökün, üzerini düzeltin ve oda sıcaklığına gelene kadar dışarıda bekletin.', 'Ardından kapağını kapatıp buzdolabına koyun. En az 3-4 saat bekletin.', 'Buzdolabından çıkarınca dilimleyin ve az yağlı bir tavada önlü arkalı iyice kızarana kadar pişirin.', 'Lavaşın tabanına naneli süzme yoğurdu sürün, üzerine kızaran mercimekleri, turşuyu, sosu ve rokayı ekleyerek dürüm yapın.'],
+                link: 'Yeşil Mercimek Tofusu (Dürüm) Tarifi',
+                url: 'https://www.instagram.com/p/C5OMI6qIIVN/'
+            },
+
+            'Çıtır Nohutlu Brokoli Salatası': {
+                ingredients: ['1 baş brokoli', '1 adet kapya biber', '1 adet havuç', '1 yemek kaşığı mısır ve kornişon turşu', '6 yemek kaşığı haşlanmış nohut', '4 tepeleme yemek kaşığı yoğurt', '1 tatlı kaşığı hardal', 'Dilediğiniz baharatlar (kırmızı toz biber, tuz, kajun vb.)', '2 tatlı kaşığı zeytinyağı', 'Göz kararı sıcak su'],
+                instructions: ['Brokoliyi yıkayın, çiçeklerine ayırın ve buharda haşlayın.', 'Havucu rendeleyin ve kapya biberi şerit şeklinde doğrayın.', 'Bir tavaya 1 tatlı kaşığı yağ ekleyin, havuç ve kapya biberi kavurun. Yağ miktarı az olduğu için sıcak su ekleyerek kavurmaya devam edin.', 'Başka bir tavaya kalan yağı, baharatları ve nohutu ekleyip nohutu çıtır kıvama getirin.', 'Yoğurt, hardal ve baharatlar ile sosunuzu hazırlayın.', 'Tüm salata malzemelerini birleştirin, sosu karıştırın ve çıtır nohutu en üste ilave edin.'],
+                link: 'Çıtır Nohutlu Brokoli Salatası Tarifi',
+                url: 'https://www.instagram.com/reel/DRunovdjOHT/'
+            },
+            'Çıtır Parmesanlı Brokoli': {
+                ingredients: ['Haşlanmış brokoli', 'Tabanı için: Parmesan peyniri (veya kaşar/eriyen herhangi bir peynir)', 'Sürdüğüm Sos: Zeytinyağı, Pul biber, Karabiber, Tuz'],
+                instructions: ['Yağlı kağıt serili fırın tepsisinin tabanına rendelenmiş parmesan (veya kaşar) peynirini yayın.', 'Haşlanmış brokoli çiçeklerini peynirlerin üzerine dizin.', 'Bardağın altıyla brokolilerin üzerine bastırarak onları ezin.', 'Zeytinyağı ve baharatlarla hazırladığınız sosu brokolilerin üzerine sürün.', 'Önceden ısıtılmış 180 derece fırında peynirler kızarana kadar, yaklaşık 15-20 dakika pişirin.'],
+                link: 'Çıtır Parmesanlı Brokoli Tarifi',
+                url: 'https://www.instagram.com/p/CzJYcg0IIGR/'
+            },
+            'Panelenmiş Halka Kabak': {
+                ingredients: ['Kabak', 'Galeta unu', 'Zeytinyağı', 'Kırmızı toz biber', 'Sarımsak tozu', 'Tuz', 'Sosu için: Labne'],
+                instructions: ['Kabakların içini oyarak başlayın ve parmak kalınlığından biraz daha ince olacak şekilde halka halka kesin.', 'Kestiğiniz kabakları bir kaseye alın; üzerine zeytinyağı, sarımsak tozu, kırmızı toz biber ve tuz ilave edip baharatlar eşit dağılana kadar karıştırın.', 'Ayrı bir tabağa galeta unu alın ve soslu kabakları tek tek önlü arkalı galeta ununa bulayın.', 'Kabakları fırın tepsisine dizin, üzerlerine biraz daha zeytinyağı gezdirip kızarana kadar fırınlayın.', 'Sosu için: Oyduğunuz kabakların iç kısımlarını tavaya alıp üzerine zeytinyağı ve tuz ilave ederek soteleyin.', 'Sotelenen kabak içleri soğuyunca labne ile karıştırıp blenderdan geçirin. Üzerine ekstra baharat ve zeytinyağı ilave ederek kabakların yanında servis edin.'],
+                link: 'Panelenmiş Halka Kabak Tarifi',
+                url: 'https://www.instagram.com/p/DI6ELgKI8Cq/'
+            },
+            'Patates Çanağı': {
+                ingredients: ['Patates Tabanı İçin: 2 adet orta boy patates, 1 dolu yemek kaşığı tereyağı, İnce kıyılmış maydanoz, Tuz, karabiber, nane, kekik', 'İç Dolgusu ve Sosu İçin: Yoğurt, Sarımsak, Tereyağı, Kırmızı toz biber'],
+                instructions: ['Patatesleri haşlayın ve kabuklarını soyup sıcakken güzelce ezin.', 'Püre haline gelen patateslere tereyağını, ince kıyılmış maydanozu ve baharatları ekleyip iyice karıştırın.', 'Hazırladığınız harçtan cevizden biraz büyük parçalar koparıp yuvarlayın. Ortalarına parmağınızla bastırarak çanak şekli verin.', 'Çanakların içini sarımsaklı yoğurt ile doldurun.', 'Son dokunuş olarak; küçük bir tavada tereyağı ve kırmızı toz biberi 2 dakika kadar kızdırıp çanakların üzerine gezdirin.'],
+                link: 'Patates Çanağı Tarifi',
+                url: 'https://www.instagram.com/p/C6l4UBrtHhY/'
+            },
+            'Patatesli Glutensiz Pirinç Yufkası Böreği': {
+                ingredients: ['Börek ve Sosu İçin: 6 adet pirinç yufkası, 2 yumurta, 1/2 su bardağı süt, 2 yemek kaşığı zeytinyağı, Tuz', 'İç Harcı İçin: 2 adet haşlanmış patates, 1 adet soğan, 1 tatlı kaşığı salça, Tuz, karabiber'],
+                instructions: ['İç harcı hazırlamak için haşlanmış patatesleri güzelce ezin.', 'Soğanı az yağda kavurun, üzerine salçayı ekleyip biraz daha kavurmaya devam edin.', 'Ezilmiş patatesleri, tuzu ve karabiberi kavrulan soğanlı karışıma ekleyip iyice karıştırın ve ocaktan alın.', 'Pirinç yufkalarını ıslatacağımız sos için; geniş bir tabakta yumurtaları, sütü, zeytinyağını ve tuzu çırpın.', 'Pirinç yufkalarını tek tek bu sosa batırıp ıslatın, tezgaha serip hafifçe yumuşamalarını bekleyin.', 'Yumuşayan yufkaların içine patatesli harçtan koyup rulo veya dilediğiniz şekilde sarın.', 'Sardığınız börekleri pişirme kağıdı serili tepsiye dizin. Önceden ısıtılmış 180°C fırında 20 dakika boyunca pişirin.'],
+                link: 'Patatesli Glutensiz Pirinç Yufkası Böreği Tarifi',
+                url: 'https://www.instagram.com/p/DPL9J7kjPql/'
+            },
+            'Sebzeli Galette': {
+                ingredients: ['Hamuru İçin: 1+1/4 su bardağı tam buğday unu, 1/2 su bardağı fındık unu, 3 silme yemek kaşığı soğuk tereyağı, 1 adet yumurta (soğuk), 1 çay kaşığı tuz', 'İç Dolgu: Domates salçası + Kekik, Kabak, havuç, mantar, domates, kaşar peyniri'],
+                instructions: ['Hamur için olan tüm malzemeleri rondodan geçirin. Ele yapışmayan bir hamur elde edin.', 'Streç filme sarıp 30 dakika buzdolabında bekletin. Bu esnada sebzeleri dilimleyin.', 'Hamuru iki yağlı kağıt arasında merdane ile ince bir şekilde açın.', 'Ortasına domates salçası ve fesleğen karışımı sürün. Sebzeleri dizin.', 'Kenarlardan kapatın.', 'Fırında 25-30 dakika pişirin. Son 5 dakika kaşar peyniri ekleyin.'],
+                link: 'Sebzeli Galette Tarifi',
+                url: 'https://www.instagram.com/reel/CEuXzZdJSlP/'
+            },
+            'Soslu Çıtır Patates Salatası': {
+                ingredients: ['Salata Malzemeleri: 2 adet patates, 1 adet kırmızı soğan, Roka ve salatalık', 'Sosu İçin: 3 yemek kaşığı süzme yoğurt, 2,5 yemek kaşığı limon suyu, Tuz, Zeytinyağı, 1 tatlı kaşığı hardal'],
+                instructions: ['Patatesleri haşlayın.', 'Haşlanan patatesleri bir kaba alın ve videodaki gibi bir bardağın altıyla üzerlerine bastırarak ezin.', 'Ezdiğiniz patatesleri, dışlarının çıtırlaşması için fırında veya az yağlı tavada biraz kızartın.', 'Kırmızı soğanı piyazlık doğrayın; rokayı ve salatalığı hazırlayın.', 'Ayrı bir kapta süzme yoğurt, limon suyu, tuz, zeytinyağı ve hardalı pürüzsüz olana kadar karıştırarak sosu hazırlayın.', 'Tüm malzemeleri geniş bir kasede birleştirip sosla harmanlayarak servis edin.'],
+                link: 'Soslu Çıtır Patates Salatası Tarifi',
+                url: 'https://www.instagram.com/p/C3SfoWoI0ft/'
+            },
+            'Yeşil Mercimek Köftesi': {
+                ingredients: ['1,5 su bardağı yeşil mercimek', '1 orta boy soğan', '1 adet kapya biber', 'Maydanoz / dereotu', '2 diş sarımsak', '2 yemek kaşığı zeytinyağı', '1 tepeleme tatlı kaşığı kimyon', '1 çay kaşığı pul biber', '1 çay kaşığı karabiber', 'Biraz zerdeçal', '1 tatlı kaşığı tuz', '1 adet yumurta', '3 yemek kaşığı tam buğday / yulaf unu', '3 yemek kaşığı galeta unu', 'Yoğurt Sos için: 1 yemek kaşığı süzme yoğurt, 1 tatlı kaşığı tahin, 1 yemek kaşığı yoğurt suyu'],
+                instructions: ['1,5 su bardağı yeşil mercimeği güzelce yıkayın ve 3 su bardağı su ile haşlayın.', 'Haşlanmış mercimeği, soğan, kapya biber, maydanoz/dereotu, sarımsak, zeytinyağı ve tüm baharatları (kimyon, pul biber, karabiber, zerdeçal, tuz) birleştirerek blend edin.', 'Daha sonra karışıma yumurta, tam buğday/yulaf unu ve galeta ununu ilave edip beraber güzelce yoğurun.', 'Harcı 15 dakika buzdolabında dinlendirin.', 'Köftelere şekil verip tepsiye dizdikten sonra üzerlerine biraz zeytinyağı sürün.', 'Önceden ısıttığınız 180 derecelik fırında kontrol ederek yaklaşık 30-40 dk pişirin.', 'Yoğurt sos için süzme yoğurt, tahin ve yoğurt suyunu karıştırarak hazırlayın.'],
+                link: 'Yeşil Mercimek Köftesi Tarifi',
+                url: 'https://www.instagram.com/p/DR48-dKDNHH/'
+            },
+            'Yeşil Mercimekli Salata': {
+                ingredients: ['1 kase haşlanmış yeşil mercimek', '2 yemek kaşığı haşlanmış mısır', '1 adet köz kapya biber', 'Bir tutam dereotu', 'Taze veya kuru nane', '2-3 dal taze soğan', 'Sosu İçin: Yarım limonun suyu, Zeytinyağı, Tuz, Sumak'],
+                instructions: ['Köz kapya biberi, taze soğanı ve dereotunu ince ince doğrayın.', 'Doğradığınız yeşillikleri ve biberi, haşlanmış yeşil mercimek ve mısır ile geniş bir kasede bir araya getirin.', 'Taze veya kuru naneyi de ilave edin.', 'Sosu için zeytinyağı, yarım limonun suyu, tuz ve sumağı ayrı bir yerde karıştırın.', 'Hazırladığınız sosu salatanın üzerine gezdirip tüm malzemeleri güzelce harmanlayın.'],
+                link: 'Yeşil Mercimekli Salata Tarifi',
+                url: 'https://www.instagram.com/reel/DQMjt7XDDK8/'
+            },
+
+            '2 Malzemeli Hindistan Cevizli Kurabiye': {
+                ingredients: ['1 adet büyük boy muz', '1 su bardağı Hindistan cevizi', 'Üzeri İçin (İsteğe Bağlı): Eritilmiş çikolata veya fıstık ezmesi'],
+                instructions: ['Muzu bir kapta çatal yardımıyla güzelce ezin.', 'Üzerine Hindistan cevizini ekleyin ve iki malzeme bütünleşene kadar iyice karıştırıp yoğurun.', 'Karışımdan parçalar koparıp yuvarlayın, tepsiye dizin ve parmağınızla ortalarına hafifçe bastırarak çukurlar (küçük havuzlar) oluşturun.', 'Önceden ısıtılmış 160 derece fırında pişirin.', 'Fırından çıktıktan sonra, kurabiyelerin ortasındaki çukurlara isteğinize göre eritilmiş çikolata veya fıstık ezmesi doldurun.'],
+                link: '2 Malzemeli Hindistan Cevizli Kurabiye Tarifi',
+                url: 'https://www.instagram.com/p/DSfnvaQgjMc/'
+            },
+            'Çilekli Galette': {
+                ingredients: ['Hamur İçin: 1 adet yumurta, 1 yemek kaşığı bal, Yarım su bardağı badem unu, 1+1/4 su bardağı tam buğday unu, 3 silme yemek kaşığı soğuk tereyağı, 1/4 çay kaşığı tuz', 'İç Harç İçin: 2 avuç dolusu çilek, 1,5 yemek kaşığı bal'],
+                instructions: ['Hamur için olan tüm malzemeleri robottan/rondodan geçirin.', 'Ele yapışmayan bir kıvam elde edin. Hamuru streç filme sarıp 30 dakika buzdolabında bekletin.', 'Çilekleri kalınca doğrayın ve balla karıştırın. Çilekler suyunu salarken hamuru yağlı kağıtta açın.', 'Çileklerin suyunu süzerek susuz olarak hamurun üzerine ekleyin.', 'Hamuru kenarlarından kapatın. Önceden ısıtılmış 180 derece fırında yaklaşık 20-30 dakika pişirin.'],
+                link: 'Çilekli Galette Tarifi',
+                url: 'https://www.instagram.com/p/B_zO-rgHHwe/'
+            },
+            'Kakaolu Tahin Soslu Yulaflı Krep': {
+                ingredients: ['Hamur İçin (2 adet çıkıyor): 1 yumurta, 1/3 çay bardağı süt, 4 yemek kaşığı yulaf unu, Bir çimdik tuz', 'Sosu İçin: 1 yemek kaşığı tahin, 1 yemek kaşığı kakao, 3 yemek kaşığı süt, 1/2 yemek kaşığı bal', 'İçi İçin: 1 adet muz'],
+                instructions: ['Krep için olan tüm malzemeleri (yumurta, süt, yulaf unu ve tuz) pürüzsüz olana kadar blenderdan geçirin.', 'Hazırladığınız karışımı ikiye bölüp, kızdırdığınız tavada arkalı önlü güzelce pişirin.', 'Sosu hazırlamak için tahin, kakao, süt ve balı küçük bir kapta karıştırın. Muzu dilimleyin.', 'Pişen her bir krebin arasına yarım muzu ve hazırladığınız sosun bir kısmını ekleyip güzelce dürüm şeklinde sarın.', 'Üzerine kalan sosu gezdirin. İsteğe bağlı olarak üzerini süsleyebilirsiniz.'],
+                link: 'Kakaolu Tahin Soslu Yulaflı Krep Tarifi',
+                url: 'https://www.instagram.com/reel/DRpcGwHDPv4/'
+            },
+            'Pişmeyen Pratik Cheesecake': {
+                ingredients: ['Alt Taban Malzemeleri: 5 adet etli iri hurma, 6 yemek kaşığı yulaf ezmesi, 1 çay kaşığı tarçın', 'Orta Katman (Krema) Malzemeleri: 4 yemek kaşığı süzme yoğurt, 2 yemek kaşığı labne, 2 yemek kaşığı bal, 2 yemek kaşığı dolusu Hindistan cevizi rendesi, Vanilin', 'Üst Katman (Sosu) İçin: 15-20 adet küçük çilek, 1 tatlı kaşığı chia tohumu (veya nişasta), 2 yemek kaşığı bal'],
+                instructions: ['Taban: Hurma, yulaf ve tarçını blenderdan geçirin. Karışımı yağlı kağıt serili bir kalıba dizeleyin ve bir bardağın tersiyle bastırarak iyice yerleştirin.', 'Krema: Yoğurt, labne, bal ve Hindistan cevizini karıştırın. Hazırladığınız tabanın üzerine güzelce yayın ve donması için difrize atın.', 'Sos: Çilekleri küçültüp yağsız tavada spatula ile ezerek kısık ateşte pişirin.', 'Çilekler ölünce chia tohumunu ekleyip karıştırarak suyunu çekmesini sağlayın. Ocaktan alınca ılımasını bekleyip balı karıştırın.', 'Birleştirme: Difrizde donan tabanların üzerine soğuyan çilek sosunu dökün.', 'İyice soğuduktan sonra dilimleyerek servis edin.'],
+                link: 'Pişmeyen Pratik Cheesecake Tarifi',
+                url: 'https://www.instagram.com/p/C5tDD3LNWVj/'
+            },
+            'Protein Çörek (Rus Çöreği)': {
+                ingredients: ['Hamur İçin: 300 gram süzme peynir, 1 yumurta + 1 yumurta akı, 100-120 gram pirinç unu, 3 yemek kaşığı elma özü, 1/2 çay kaşığı tuz, 1 çay kaşığı vanilin, 1 çay kaşığı kabartma tozu', 'Kreması İçin: 2 yemek kaşığı ekşi krema veya labne, 2 yemek kaşığı yoğurt, 1 yumurta sarısı, 2 yemek kaşığı elma özü', 'Üzeri İçin: Yaban mersini veya orman meyveleri'],
+                instructions: ['Derin bir kapta peyniri ezin, ardından diğer hamur malzemelerini ekleyip güzelce yoğurun.', 'Hazırladığınız hamurdan küçük yuvarlaklar yapıp pişirme kağıdı serili fırın tepsisine dizin. Çöreklerin ortalarına bir kaşık yardımıyla hafif çukurlar açın.', 'Krema için olan tüm malzemeleri ayrı bir kapta pürüzsüz olana kadar karıştırıp hamurların ortasındaki çukurları bu harçla doldurun.', 'Kremaların üzerine yaban mersini veya dilediğiniz orman meyvelerini ekleyin.', 'Önceden ısıtılmış 180°C fırında, 20-25 dakika kontrollü bir şekilde pişirin.'],
+                link: 'Protein Çörek (Rus Çöreği) Tarifi',
+                url: 'https://www.instagram.com/reel/DMiI9bJsxTP/'
+            },
+            'Raffaello Tadında Ara Öğün': {
+                ingredients: ['1 küçük boy olgunlaşmış muz', '1 tepeleme yemek kaşığı Hindistan cevizi (15 gr)', '1 tepeleme yemek kaşığı süzme yoğurt', '1 ölçek protein tozu (İsteğe bağlı)', 'Limon kabuğu rendesi (zest)', 'Vanilin (İsteğe bağlı)', 'Üzeri İçin: Hindistan cevizi, 7-8 adet çiğ kırılmış fındık veya badem'],
+                instructions: ['Olgunlaşmış muzu bir kapta çatal yardımıyla güzelce ezin.', 'Üzerine Hindistan cevizi, süzme yoğurt, protein tozu, limon kabuğu rendesi ve vanilini ekleyip tüm malzemeler bütünleşene kadar karıştırın.', 'Karışımı uygun bir sunum kasesine alın. Üzerini bolca Hindistan cevizi ve kırılmış fındık/badem ile süsleyin.', 'Buzdolabında en az 1 saat dinlendirdikten sonra soğuk soğuk tüketin.'],
+                link: 'Raffaello Tadında Ara Öğün Tarifi',
+                url: 'https://www.instagram.com/p/DO34F_NDODC/'
+            },
+            'Rafine Şekersiz ve Unsuz Şeftalili Galette': {
+                ingredients: ['Hamur İçin: 1 yumurta, 1 yemek kaşığı bal, 1.5 su bardağı tam buğday unu, 3 silme yemek kaşığı soğuk tereyağı, 1 tutam tuz', 'İçi İçin: 2 adet şeftali, 2 yemek kaşığı bal'],
+                instructions: ['Tüm hamur malzemelerini rondodan geçirin.', 'Ele yapışmayan bir kıvama gelen bu hamuru streçe sarıp 30 dakika buzdolabında dinlendirin.', 'İçi için şeftalileri doğrayıp bal ile karıştırın ve kenara alın.', 'Dinlenen hamuru iki yağlı kağıt arasına alarak yuvarlak bir şekil verin (açın).', 'Ballı şeftalileri hamurun ortasına dizip, hamuru kenarlarından şeftalilerin üzerine doğru katlayın.', 'Kapattığınız hamur kenarlarına şeftalili karışımın kasede kalan suyundan sürün. Geri kalan suyu da galettenin ortasına dökün.', 'Önceden ısıtılmış 180 derece fırında 20 dakika kontrollü bir şekilde pişirin.'],
+                link: 'Rafine Şekersiz ve Unsuz Şeftalili Galette Tarifi',
+                url: 'https://www.instagram.com/reel/C95EcXCtG12/'
+            },
+            'Snickers Tadında Atıştırmalık': {
+                ingredients: ['8 adet hurma', '8 çay kaşığı fıstık ezmesi', '8 kare kakao oranı yüksek bitter çikolata veya şeker ilavesiz çikolata (40 gr)', 'Tuz'],
+                instructions: ['Hurmaların ortasını yarıp çekirdeklerini dikkatlice çıkarın.', 'Her bir hurmanın içine birer çay kaşığı fıstık ezmesi doldurun.', 'Benmari usulü erittiğiniz çikolatayla hurmaları kaplayın ve üzerlerine çok hafif tuz serpin.', 'Hazırladığınız hurmaları çikolatanın donması için minimum 15 dakika buzlukta dinlendirin.'],
+                link: 'Snickers Tadında Atıştırmalık Tarifi',
+                url: 'https://www.instagram.com/p/DF0myo-o3B4/'
+            },
+            'Şekersiz Şeftalili Crumble': {
+                ingredients: ['Meyveli Taban İçin: 2 adet şeftali, 1 avuç böğürtlen (isteğe bağlı), 1 tepeleme yemek kaşığı nişasta, 2 yemek kaşığı elma suyu konsantresi, 2 yemek kaşığı limon suyu', 'Crumble Harcı İçin: 3 yemek kaşığı oda sıcaklığında tereyağı, 1 yemek kaşığı hindistan cevizi yağı, 4-5 yemek kaşığı elma suyu konsantresi, 100 gram tam buğday unu, 100 gram yulaf ezmesi, 1 dolu çay kaşığı tarçın'],
+                instructions: ['Dilimlenmiş şeftalileri limon suyu, elma suyu konsantresi ve nişastayla bir kapta güzelce karıştırın. İsteğe bağlı olarak böğürtlenleri de bu aşamada ekleyin.', 'Crumble harcı için olan tüm malzemeleri ayrı bir kapta elinizle yoğurarak ufalanan (crumble) bir kıvama getirin.', 'Fırın kabına önce meyveli karışımı yerleştirin, üzerine de hazırladığınız crumble harcını serpiştirerek yayın.', 'Önceden ısıtılmış 180°C fırında 25 dakika pişirin.'],
+                link: 'Şekersiz Şeftalili Crumble Tarifi',
+                url: 'https://www.instagram.com/reel/DMTCpzxMr-Q/'
+            },
+            'Yulaflı Elmalı Çubuk Kraker ve Sağlıklı Dip Sos': {
+                ingredients: ['Kraker Malzemeleri: 1 su bardağı yulaf, 1 adet elma, 1 yemek kaşığı chia tohumu (önceden suda bekletilmiş), 1 yemek kaşığı zeytinyağı, 1 çay kaşığı tarçın', 'Sağlıklı Dip Sos İçin: 1 yemek kaşığı kakao, 1 yemek kaşığı süt, 1 tatlı kaşığı bal'],
+                instructions: ['Suda bekletip jel kıvamına getirdiğiniz chia tohumunu ve diğer tüm kraker malzemelerini blenderdan geçirin.', 'Hazırladığınız hamuru bir sıkma torbasına alın.', 'Yağlı kağıt serili fırın tepsisine hamuru ince uzun çubuklar halinde sıkın.', 'Önceden ısıtılmış 180°C fırında üzerleri güzelce kızarana kadar pişirin.', 'Krakerler pişerken sos malzemelerini küçük bir kasede pürüzsüz olana kadar karıştırın.', 'Fırından çıkan çıtır krakerlerinizi hazırladığınız çikolatalı sosa batırarak afiyetle tüketin.'],
+                link: 'Yulaflı Elmalı Çubuk Kraker ve Sağlıklı Dip Sos Tarifi',
+                url: 'https://www.instagram.com/p/DM5e5iYNgco/'
+            }
+        };
+
+        function toggleAccordion(categoryId) {
+            const content = document.getElementById(categoryId + '-accordion');
+            const allContents = document.querySelectorAll('.accordion-content');
+            allContents.forEach(c => {
+                if (c.id !== categoryId + '-accordion') {
+                    c.classList.remove('active');
+                    c.style.display = 'none';
+                }
+            });
+            if (content.classList.contains('active')) {
+                content.classList.remove('active');
+                content.style.display = 'none';
+            } else {
+                content.classList.add('active');
+                content.style.display = 'grid';
+            }
+        }
+
+        function cleanText(text) {
+            return text.replace(/\+\]/g, '').trim();
+        }
+
+        function showRecipe(recipeName, categoryId) {
+            const recipe = recipes[recipeName];
+            const detailArea = document.getElementById('recipe-detail-area');
+            const modal = document.getElementById('recipe-modal');
+            const modalContent = modal.querySelector('.modal-content');
+
+            if (!recipe) return;
+
+            modalContent.className = 'modal-content'; 
+
+            if (categoryId) {
+                modalContent.classList.add('modal-' + categoryId);
+            }
+
+            let htmlContent = `
+                <h2>${recipeName}</h2>
+                <div class="recipe-detail">
+                    <h3>Malzemeler:</h3>
+                    <ul>${recipe.ingredients.map(ing => `<li>${cleanText(ing)}</li>`).join('')}</ul>
+                    <h3>Yapılışı:</h3>
+                    <ol>${recipe.instructions.map(ins => `<li>${cleanText(ins)}</li>`).join('')}</ol>
+                    
+                    ${recipe.url ? `
+                        <h3>Tarif Linki:</h3>
+                        <p><a href="${recipe.url}" target="_blank" class="recipe-link">${recipe.link}</a></p>
+                    ` : ''}
+                </div>
+            `;
+
+            detailArea.innerHTML = htmlContent;
+            modal.style.display = 'flex'; 
+        }
+
+        function closeModal() {
+            document.getElementById('recipe-modal').style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('recipe-modal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>
