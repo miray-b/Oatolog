@@ -274,6 +274,44 @@
         .recipe-link:hover { color: #8e6c5c; }
 
         .copyright-text { font-size: 0.8rem; color: #b1a094; margin-top: auto; padding-top: 50px; text-align: center; }
+
+        /* ========================================= */
+        /* TELEFONLAR İÇİN MOBİL UYUM (RESPONSIVE) AYARLARI */
+        /* ========================================= */
+        @media (max-width: 768px) {
+            /* 1. Başlık ve Logoları Ekrana Sığdır */
+            .title-logo { height: 60px; transform: scale(1.2); }
+            h1.oatlog-title { font-size: 2.5rem; margin: 0 5px; }
+            .title-container { margin-bottom: 30px; gap: 5px; }
+
+            /* 2. Kategori İsimlerinin Taşmasını Engelle */
+            .categories-grid { gap: 15px; }
+            .category-title { 
+                font-size: 1rem; 
+                padding: 10px; 
+                width: 85%; 
+                white-space: normal; 
+                line-height: 1.3;
+            }
+
+            /* 3. Tarif Butonlarındaki Sıkışmayı Çöz */
+            .accordion-content.active { 
+                grid-template-columns: 1fr; 
+            }
+            .accordion-content { padding: 25px 20px; }
+            .recipe-btn { padding: 12px; font-size: 0.9rem; }
+            
+            /* 4. Açılan Tarif Kartını (Modal) Ekrana Oturt */
+            .modal-content {
+                width: 95%;
+                padding: 40px 20px 40px 25px;
+                border-radius: 20px;
+            }
+            .recipe-detail h2 { font-size: 1.5rem; }
+            .recipe-detail h3 { font-size: 1.1rem; }
+            .recipe-detail ul, .recipe-detail ol { padding-left: 25px; }
+            .close-modal { top: 10px; right: 15px; font-size: 2rem; }
+        }
     </style>
 </head>
 <body>
@@ -546,7 +584,7 @@
             },
             'Yeşil Mercimekli Salata': {
                 ingredients: ['1 kase haşlanmış yeşil mercimek', '2 yemek kaşığı haşlanmış mısır', '1 adet köz kapya biber', 'Bir tutam dereotu', 'Taze veya kuru nane', '2-3 dal taze soğan', 'Sosu İçin: Yarım limonun suyu, Zeytinyağı, Tuz, Sumak'],
-                instructions: ['Köz kapya biberi, taze soğanı ve dereotunu ince ince doğrayın.', 'Doğradığınız yeşillikleri ve biberi, haşlanmış yeşil mercimek ve mısır ile geniş bir kasede bir araya getirin.', 'Taze veya kuru naneyi de ilave edin.', 'Sosu için zeytinyağı, yarım limonun suyu, tuz ve sumağı ayrı bir yerde karıştırın.', 'Hazırladığınız sosu salatanın üzerine gezdirip tüm malzemeleri güzelce harmanlayın.'],
+                instructions: ['Köz kapya biberi, taze soğanı ve dereotunu ince float doğrayın.', 'Doğradığınız yeşillikleri ve biberi, haşlanmış yeşil mercimek ve mısır ile geniş bir kasede bir araya getirin.', 'Taze veya kuru naneyi de ilave edin.', 'Sosu için zeytinyağı, yarım limonun suyu, tuz ve sumağı ayrı bir yerde karıştırın.', 'Hazırladığınız sosu salatanın üzerine gezdirip tüm malzemeleri güzelce harmanlayın.'],
                 link: 'Yeşil Mercimekli Salata Tarifi',
                 url: 'https://www.instagram.com/reel/DQMjt7XDDK8/'
             },
@@ -631,6 +669,7 @@
             }
         }
 
+        // DÜZELTİLDİ: RegEx temizleme kuralı (Alıntı etiketlerini siler)
         function cleanText(text) {
             return text.replace(/\+\]/g, '').trim();
         }
